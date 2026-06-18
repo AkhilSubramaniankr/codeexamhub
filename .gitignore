@@ -6,6 +6,10 @@ backend/__pycache__/
 # Environment variables
 backend/.env
 
+.env
+.venv
+venv
+
 # Node
 frontend/node_modules/
 
@@ -15,3 +19,4 @@ frontend/build/
 # OS files
 .DS_Store
 Thumbs.db
+
