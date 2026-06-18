@@ -88,7 +88,8 @@ async def start_exam(
 async def get_exam_details(
     id: uuid.UUID,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    mongo_db = Depends(get_mongo_db)
 ):
     # Get assignment and check status
     query = select(ExamAssignment).options(selectinload(ExamAssignment.exam)).filter(
@@ -135,8 +136,10 @@ async def get_exam_details(
     q_result = await db.execute(q_query)
     questions = q_result.scalars().all()
     
-    # Populate visible test cases for each question
+    # Populate visible test cases and saved snapshots for each question
     questions_response = []
+    snapshots_collection = mongo_db["snapshots"]
+    
     for q in questions:
         tc_query = select(TestCase).filter(
             TestCase.question_id == q.id,
@@ -146,6 +149,14 @@ async def get_exam_details(
         visible_tcs = tc_result.scalars().all()
         
         q.test_cases = visible_tcs
+        
+        # Load snapshot if exists
+        snapshot = await snapshots_collection.find_one({
+            "assignment_id": str(assignment.id),
+            "question_id": str(q.id)
+        })
+        q.saved_code = snapshot.get("code") if snapshot else None
+        
         questions_response.append(q)
         
     return ExamDetailResponse(

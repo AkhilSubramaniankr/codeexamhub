@@ -42,6 +42,7 @@ class QuestionResponse(BaseModel):
     difficulty: str
     points: int
     test_cases: List[TestCaseResponse]
+    saved_code: Optional[str] = None
 
     class Config:
         from_attributes = True
